@@ -60,7 +60,7 @@ src/app/api/           track, stripe/webhook, cron/*, admin/export, admin/realti
 
 ## Deployment (Railway)
 
-The app runs as one Railway service built from this repo (`npm run build` / `npm start`, Node ≥ 20.9). It needs a **hosted Supabase project**:
+The app runs as one Railway service built from this repo (`npm run build` / `npm start`, Node 24). It needs a **hosted Supabase project**:
 
 1. Create a project at supabase.com, then apply the schema: `npx supabase link --project-ref <ref> && npx supabase db push` (don't run `seed.sql` in production — it's demo data).
 2. In the Railway service variables set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (and optionally Stripe / Resend / Anthropic keys from `.env.example`). Railway rebuilds on change — `NEXT_PUBLIC_*` values are baked in at build time.
