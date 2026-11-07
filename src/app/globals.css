@@ -1,0 +1,195 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Tokens. Chart slots/status/ink come from the validated dataviz reference palette.
+   --------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --surface-2: #f3f3f0;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --ink-3: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.1);
+  --accent: #0b0b0b;
+  --accent-ink: #ffffff;
+
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-7: #6250d6;
+  --series-8: #e34948;
+  --ramp-250: #86b6ef;
+  --ramp-350: #5598e7;
+  --ramp-450: #2a78d6;
+  --ramp-550: #1c5cab;
+  --ramp-650: #104281;
+
+  --good: #0ca30c;
+  --good-ink: #006300;
+  --warning: #fab219;
+  --serious: #ec835a;
+  --critical: #d03b3b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-2: #232322;
+    --ink: #f0efec;
+    --ink-2: #c3c2b7;
+    --ink-3: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255, 255, 255, 0.1);
+    --accent: #f0efec;
+    --accent-ink: #0b0b0b;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+    --ramp-250: #184f95;
+    --ramp-350: #1c5cab;
+    --ramp-450: #256abf;
+    --ramp-550: #3987e5;
+    --ramp-650: #6da7ec;
+    --good-ink: #0ca30c;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --surface-2: #232322;
+  --ink: #f0efec;
+  --ink-2: #c3c2b7;
+  --ink-3: #898781;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255, 255, 255, 0.1);
+  --accent: #f0efec;
+  --accent-ink: #0b0b0b;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+  --ramp-250: #184f95;
+  --ramp-350: #1c5cab;
+  --ramp-450: #256abf;
+  --ramp-550: #3987e5;
+  --ramp-650: #6da7ec;
+  --good-ink: #0ca30c;
+}
+
+@theme inline {
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+html,
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+/* ---------------------------------------------------------------------------
+   Component classes
+   --------------------------------------------------------------------------- */
+@layer components {
+  .card {
+    min-width: 0; /* lets grid/flex columns shrink instead of growing to fit nowrap content */
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .card-pad { padding: 1rem; }
+  @media (min-width: 640px) { .card-pad { padding: 1.25rem; } }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 0.4rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+    transition: background 120ms;
+    cursor: pointer;
+  }
+  .btn:hover { background: var(--surface-2); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+  .btn-primary:hover { background: var(--accent); opacity: 0.88; }
+  .btn-danger { color: var(--critical); }
+  .btn-sm { padding: 0.2rem 0.5rem; font-size: 0.8125rem; }
+  .btn-ghost { border-color: transparent; background: transparent; }
+
+  .input {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 0.45rem 0.65rem;
+    font-size: 0.875rem;
+    color: var(--ink);
+  }
+  .input:focus { outline: 2px solid var(--series-1); outline-offset: -1px; }
+  textarea.input { min-height: 5rem; }
+
+  .label { display: block; font-size: 0.8125rem; color: var(--ink-2); margin-bottom: 0.25rem; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    padding: 0.05rem 0.5rem;
+    font-size: 0.75rem;
+    color: var(--ink-2);
+    white-space: nowrap;
+  }
+
+  .tnum { font-variant-numeric: tabular-nums; }
+  .muted { color: var(--ink-2); }
+  .faint { color: var(--ink-3); }
+
+  .table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  .table th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--ink-3);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .table td { padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .table tr:last-child td { border-bottom: 0; }
+  .table td.num, .table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .table tbody tr:hover { background: var(--surface-2); }
+}
