@@ -1,5 +1,6 @@
 "use server";
 import { refresh } from "next/cache";
+import { invalidateCatalog } from "@/lib/shop/catalog";
 import { z } from "zod";
 import { assertAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -25,6 +26,7 @@ export async function adjustStock(input: z.input<typeof Adjust>): Promise<Result
     if (error) throw new Error(error.message);
     await audit(admin, "stock.adjust", "variant", a.variant_id, { change, reason: a.reason, note: a.note });
     refresh();
+    invalidateCatalog();
     return { ok: true, message: `Stock now ${data}` };
   } catch (e) {
     return { ok: false, error: e instanceof z.ZodError ? e.issues[0].message : e instanceof Error ? e.message : String(e) };
@@ -55,6 +57,7 @@ export async function receiveStock(input: z.input<typeof Receive>): Promise<Resu
     if (error) throw new Error(error.message);
     await audit(admin, "stock.receive", "variant", r.variant_id, { quantity: r.quantity, source: r.source });
     refresh();
+    invalidateCatalog();
     const res = data as { quantity: number; cost_price: number };
     return { ok: true, message: admin.canSeeCosts ? `Received. ${res.quantity} in stock, avg cost ${res.cost_price}` : `Received. ${res.quantity} in stock` };
   } catch (e) {

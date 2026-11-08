@@ -1,4 +1,4 @@
-# Storefront tracking
+# Tracking
 
 The tracker is first-party (no third-party scripts). `<Analytics />` in the root layout records `page_view`
 on every navigation and engagement time when a page is hidden. Everything else is one call:
@@ -19,16 +19,10 @@ track("waitlist_signup", { product_id, props: { brand, size } });
 track("offer_made", { product_id, value: amount });
 ```
 
-`purchase` is **not** sent from the browser. The Stripe webhook records it server-side from the
-Checkout Session, so revenue can't be faked or double-counted. When creating the Checkout Session, set:
+`purchase` is **not** sent from the browser: `checkout_complete` records it server-side when Stripe confirms payment,
+attributed to the analytics session passed in when checkout started (`currentSessionId()`).
 
-```ts
-metadata: {
-  items: JSON.stringify([{ variant_id, quantity, unit_price }]),
-  session_id: currentAnalyticsSessionId, // read from localStorage "pakz_sid" (consented) — omit otherwise
-  reserved: "1", // only if you reserved stock for the cart via adjust_stock(..., 'reserved')
-}
-```
+The storefront (`src/app/(shop)`) already makes all of these calls.
 
 ## Consent
 

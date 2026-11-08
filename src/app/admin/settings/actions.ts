@@ -1,5 +1,5 @@
 "use server";
-import { refresh } from "next/cache";
+import { refresh, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { assertAdmin } from "@/lib/auth";
 import { db, must } from "@/lib/db";
@@ -31,6 +31,7 @@ export async function saveSettings(input: z.input<typeof Settings>): Promise<Res
     must(await db().from("store_settings").update({ ...s, contact_email: s.contact_email || null, email_from: s.email_from || null, updated_at: new Date().toISOString() }).eq("id", 1).select("id"), "settings");
     await audit(admin, "settings.update", "settings", "1", s);
     refresh();
+    revalidateTag("settings", { expire: 0 });
     return { ok: true, message: "Settings saved" };
   } catch (e) { return fail(e); }
 }

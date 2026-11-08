@@ -121,6 +121,11 @@ export function track(type: TrackEventType, data: Omit<TrackEvent, "type" | "pat
   else schedule();
 }
 
+/** The current analytics session id (passed to checkout so the purchase is attributed). */
+export function currentSessionId(): string | null {
+  return disabled() ? null : session().id;
+}
+
 /** Product pages call this so engagement time is attributed to the product. */
 export function setPageContext(ctx: Pick<TrackEvent, "product_id" | "category" | "brand">) {
   pageContext = ctx;

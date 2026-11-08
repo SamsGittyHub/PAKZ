@@ -23,6 +23,22 @@ curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/nig
 
 Tests: `npm test` (forecasting and recommendation engine unit tests). The SQL ledger, refunds and every dashboard RPC are exercised by `db/tests/01_inventory_flow.sql` (run it with psql against a migrated database; it rolls back).
 
+## Storefront
+
+| Route | What |
+|---|---|
+| `/` | Hero, next drop with countdown, new in, grails (featured), categories, sell-to-us CTA |
+| `/shop` | All available items; filters (category, brand, size, condition, price, recently sold), sort, search. Zero-result searches offer a waitlist. |
+| `/product/[slug]` | Gallery, size/condition picker, add to bag, make an offer (auto-declined below the listing's floor), sold-out waitlist, JSON-LD |
+| `/bag` | Live stock and price check, then Stripe Checkout |
+| `/drops` | Scheduled/live drops and raffle entry |
+| `/sell` | Sell-to-us form with photos (land in Admin → Sell to us) |
+| `/info/*` | Shipping, returns, authenticity, privacy |
+
+**Checkout** reserves stock atomically when the shopper clicks Checkout (`checkout_open`), so one-off items can't be double-sold; the hold lasts as long as the Stripe session (30 min). Paid → `checkout_complete` records the order once (idempotent); expired/abandoned → stock is released (webhook, the cancel link back to the bag, or the hourly job). Stripe webhook events to enable: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`, `charge.refunded`. Shipping rates come from Settings; destination countries from `SHIP_COUNTRIES` (default `GB`).
+
+Catalogue reads are cached (`"use cache"`, tag `catalog`) and invalidated by every admin, checkout and webhook write that changes listings or stock. Public pages select only public columns — cost and offer floors never reach the storefront. All tracking calls in [docs/ANALYTICS.md](docs/ANALYTICS.md) are wired in.
+
 ## What's where
 
 | Area | Route | Notes |

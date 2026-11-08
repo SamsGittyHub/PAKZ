@@ -193,3 +193,53 @@ body {
   .table td.num, .table th.num { text-align: right; font-variant-numeric: tabular-nums; }
   .table tbody tr:hover { background: var(--surface-2); }
 }
+
+/* ---------------------------------------------------------------------------
+   Storefront
+   --------------------------------------------------------------------------- */
+@layer components {
+  .shop-display {
+    font-family: var(--font-display), var(--font-sans);
+    font-stretch: 75%;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    line-height: 0.92;
+  }
+  .shop-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: var(--ink);
+    color: var(--page);
+    padding: 0.85rem 1.25rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    transition: opacity 120ms;
+  }
+  .shop-btn:hover { opacity: 0.85; }
+  .shop-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .shop-btn-outline { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }
+  .shop-input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    background: var(--page);
+    padding: 0.7rem 0.8rem;
+    font-size: 0.9375rem;
+    color: var(--ink);
+  }
+  .shop-input:focus { outline: none; border-color: var(--ink); }
+  .shop-chip {
+    border: 1.5px solid var(--border);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    min-width: 3rem;
+    text-align: center;
+  }
+  .shop-chip[aria-pressed="true"], .shop-chip[aria-checked="true"] { border-color: var(--ink); background: var(--ink); color: var(--page); }
+  .shop-chip:disabled { color: var(--ink-3); text-decoration: line-through; cursor: not-allowed; }
+}

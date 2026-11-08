@@ -1,8 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getImage } from "@/lib/storage";
 
-// Public product photos, streamed from the private bucket. Paths look like <product uuid>/<uuid>.<ext>.
-const SAFE = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(webp|jpeg|png|avif)$/i;
+// Photos streamed from the private bucket: product photos (<product uuid>/<uuid>.<ext>) and
+// sell-to-us submissions (sell-requests/<uuid>/<uuid>.<ext>).
+const SAFE = /^(sell-requests\/)?[0-9a-f-]{36}\/[0-9a-f-]{36}\.(webp|jpeg|png|avif)$/i;
 
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ path: string[] }> }) {
   const path = (await ctx.params).path.join("/");

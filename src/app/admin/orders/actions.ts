@@ -1,5 +1,6 @@
 "use server";
 import { refresh } from "next/cache";
+import { invalidateCatalog } from "@/lib/shop/catalog";
 import { z } from "zod";
 import { assertAdmin } from "@/lib/auth";
 import { db, must } from "@/lib/db";
@@ -40,6 +41,7 @@ export async function markShipped(input: { orderId: string; carrier: string; tra
     }
     await audit(admin, "order.ship", "order", o.id, input);
     refresh();
+    invalidateCatalog();
     return { ok: true, message };
   } catch (e) { return fail(e); }
 }
@@ -53,6 +55,7 @@ export async function setOrderStatus(orderId: string, status: "delivered" | "can
     await db().from("order_events").insert({ order_id: orderId, type: "status", message: `Status → ${status}`, admin_id: admin.id });
     await audit(admin, "order.status", "order", orderId, { status });
     refresh();
+    invalidateCatalog();
     return { ok: true };
   } catch (e) { return fail(e); }
 }
@@ -63,6 +66,7 @@ export async function addOrderNote(orderId: string, text: string): Promise<Resul
     if (!text.trim()) throw new Error("Note is empty");
     await db().from("order_events").insert({ order_id: orderId, type: "note", message: text.trim().slice(0, 2000), admin_id: admin.id });
     refresh();
+    invalidateCatalog();
     return { ok: true };
   } catch (e) { return fail(e); }
 }
@@ -98,6 +102,7 @@ export async function refundOrder(input: z.input<typeof Refund>): Promise<Result
     if (error) throw new Error(`${error.message}${stripeRefundId ? ` — Stripe refund ${stripeRefundId} WAS issued; reconcile manually.` : ""}`);
     await audit(admin, "order.refund", "order", o.id, { ...r, stripeRefundId });
     refresh();
+    invalidateCatalog();
     return { ok: true, message: stripeRefundId ? `Refunded via Stripe (${stripeRefundId})` : "Refund recorded" };
   } catch (e) { return fail(e); }
 }
@@ -143,6 +148,7 @@ export async function recordManualSale(input: z.input<typeof ManualSale>): Promi
     }
     await audit(admin, "order.manual_sale", "order", id, { channel: s.channel, items: s.items.length });
     refresh();
+    invalidateCatalog();
     return { ok: true, data: { id } };
   } catch (e) { return fail(e); }
 }
@@ -175,6 +181,7 @@ export async function respondOffer(input: { id: string; action: "accept" | "decl
     await sendEmail({ to: o.email, subject: `Your offer on ${title} — ${store}`, html: body });
     await audit(admin, `offer.${input.action}`, "offer", o.id, input);
     refresh();
+    invalidateCatalog();
     return { ok: true, message: `Offer ${status}` };
   } catch (e) { return fail(e); }
 }
@@ -189,6 +196,7 @@ export async function updateSellRequest(input: { id: string; status: string; off
     must(await db().from("sell_requests").update({ status, offer_price: input.offer_price ?? null, notes: input.notes ?? null }).eq("id", input.id).select("id"), "sell request");
     await audit(admin, "sell_request.update", "sell_request", input.id, input);
     refresh();
+    invalidateCatalog();
     return { ok: true };
   } catch (e) { return fail(e); }
 }
@@ -212,6 +220,7 @@ export async function saveDrop(input: { id?: string; name: string; description?:
     if (row.status === "live") await db().from("products").update({ status: "active" }).eq("drop_id", id).in("status", ["draft", "scheduled"]);
     await audit(admin, input.id ? "drop.update" : "drop.create", "drop", id, row);
     refresh();
+    invalidateCatalog();
     return { ok: true };
   } catch (e) { return fail(e); }
 }
@@ -226,6 +235,7 @@ export async function saveRaffle(input: { name: string; product_id?: string; dro
     }).select("id").single(), "raffle");
     await audit(admin, "raffle.create", "raffle", row.id, input);
     refresh();
+    invalidateCatalog();
     return { ok: true };
   } catch (e) { return fail(e); }
 }
@@ -244,6 +254,7 @@ export async function drawRaffle(raffleId: string): Promise<Result> {
     await sendEmail({ to: winner.email, subject: `You won the ${store} raffle!`, html: `<p>Congratulations — you've won${winner.size ? ` (size ${esc(winner.size)})` : ""}. We'll be in touch with a payment link.</p>` });
     await audit(admin, "raffle.draw", "raffle", raffleId, { winner: winner.id, entries: entries.length });
     refresh();
+    invalidateCatalog();
     return { ok: true, message: `Winner: ${winner.email} (1 of ${entries.length})` };
   } catch (e) { return fail(e); }
 }

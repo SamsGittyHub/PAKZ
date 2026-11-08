@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/auth";
 import { logout } from "@/app/login/actions";
 import { Sidebar, SidebarSkeleton } from "@/components/admin/Sidebar";
 
-export const metadata = { title: "PAKZ Admin", robots: { index: false, follow: false } };
+export const metadata = { title: { absolute: "PAKZ Admin", template: "%s · PAKZ Admin" }, robots: { index: false, follow: false } };
 
 async function AdminSidebar() {
   const admin = await requireAdmin();

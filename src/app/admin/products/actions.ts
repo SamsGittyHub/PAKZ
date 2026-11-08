@@ -1,5 +1,6 @@
 "use server";
 import { refresh } from "next/cache";
+import { invalidateCatalog } from "@/lib/shop/catalog";
 import { z } from "zod";
 import { assertAdmin, type AdminUser } from "@/lib/auth";
 import { db, must } from "@/lib/db";
@@ -157,6 +158,7 @@ export async function saveProduct(input: ProductInput): Promise<ActionResult<{ i
 
     await audit(admin, p.id ? "product.update" : "product.create", "product", id, { title: p.title, status: p.status });
     refresh();
+    invalidateCatalog();
     return { ok: true, data: { id } };
   } catch (e) {
     return fail(e instanceof z.ZodError ? new Error(e.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")) : e);
@@ -283,6 +285,7 @@ export async function bulkProducts(input: z.input<typeof BulkInput>): Promise<Ac
     }
     await audit(admin, `product.bulk_${action}`, "product", null, { ids, value });
     refresh();
+    invalidateCatalog();
     return { ok: true, message: message || `Done (${ids.length} products)` };
   } catch (e) {
     return fail(e);
@@ -374,6 +377,7 @@ export async function importProducts(rows: Record<string, string>[]): Promise<Ac
     }
     await audit(admin, "product.import", "product", null, { products, variants, errors: errors.length });
     refresh();
+    invalidateCatalog();
     return { ok: true, data: { products, variants, errors } };
   } catch (e) {
     return fail(e);

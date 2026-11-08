@@ -21,7 +21,6 @@ let client: PostgrestClient<any> | null = null;
 export function db(): PostgrestClient<any> {
   client ??= new PostgrestClient(env.postgrestUrl, {
     headers: { Authorization: `Bearer ${serviceToken()}` },
-    fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }),
   });
   return client;
 }

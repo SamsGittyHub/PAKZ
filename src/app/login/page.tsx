@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { LoginForm } from "./LoginForm";
 
-export const metadata = { title: "Sign in · PAKZ Admin" };
+export const metadata = { title: { absolute: "Sign in · PAKZ Admin" }, robots: { index: false } };
 
 async function Form({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const { next } = await searchParams;

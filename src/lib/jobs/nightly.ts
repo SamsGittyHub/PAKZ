@@ -5,6 +5,7 @@ import { denseDaily, forecastSeries, horizonTotal } from "@/lib/analytics/foreca
 import { predictStockouts, type VariantVelocityRow } from "@/lib/analytics/stockout";
 import { generateRecommendations, recoKey, type RecoInputs } from "@/lib/analytics/recommendations";
 import { generateBuyingBrief } from "./brief";
+import { invalidateCatalog } from "@/lib/shop/catalog";
 
 const PERIODS = [7, 30, 90] as const;
 const HISTORY_DAYS = 365;
@@ -134,6 +135,8 @@ export async function runRecommendations() {
 export async function runNightly(opts: { brief?: boolean } = {}) {
   const zone = await tz();
   const published = await rpc<number>("publish_scheduled_products");
+  const releasedCheckouts = await rpc<number>("checkout_release_expired");
+  if (published || releasedCheckouts) invalidateCatalog();
   const rollups = await refreshRollups(3);
   const forecasts = await runForecasts();
   const recommendations = await runRecommendations();
@@ -148,5 +151,5 @@ export async function runNightly(opts: { brief?: boolean } = {}) {
       brief = `failed: ${e instanceof Error ? e.message : e}`;
     }
   }
-  return { published, rollups, forecasts, recommendations, brief };
+  return { published, releasedCheckouts, rollups, forecasts, recommendations, brief };
 }
