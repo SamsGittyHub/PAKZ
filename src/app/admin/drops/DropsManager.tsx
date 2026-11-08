@@ -5,6 +5,7 @@ import { DataTable } from "@/components/admin/DataTable";
 import { Modal, useNotice } from "@/components/admin/Toast";
 import { Section } from "@/components/admin/PageHeader";
 import { drawRaffle, saveDrop, saveRaffle } from "../orders/actions";
+import { toZonedInput } from "@/lib/dates";
 
 type Row = Record<string, unknown>;
 
@@ -14,7 +15,7 @@ export function DropsManager({ drops, raffles, products }: { drops: Row[]; raffl
   const [pending, start] = useTransition();
   const { notice, ok, error } = useNotice();
   const d = dropOpen && dropOpen !== "new" ? dropOpen : null;
-  const local = (v: unknown) => (v ? new Date(String(v)).toISOString().slice(0, 16) : "");
+  const local = (v: unknown) => toZonedInput(v ? String(v) : null);
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">

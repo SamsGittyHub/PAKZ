@@ -113,3 +113,22 @@ export function rangeQuery(r: Pick<ResolvedRange, "preset" | "fromDate" | "toDat
   if (!r.compare) q.set("compare", "0");
   return q.toString();
 }
+
+/** Zone used for displaying and entering date-times (datetime-local inputs). Match it to Settings → Timezone. */
+export const DISPLAY_TZ = process.env.NEXT_PUBLIC_TIMEZONE ?? "Europe/London";
+
+/** ISO instant → "YYYY-MM-DDTHH:mm" wall-clock value in `tz`, for <input type="datetime-local">. */
+export function toZonedInput(iso: string | null | undefined, tz = DISPLAY_TZ): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return new Date(d.getTime() + tzOffsetMs(d, tz)).toISOString().slice(0, 16);
+}
+
+/** "YYYY-MM-DDTHH:mm" wall-clock value in `tz` → instant. Independent of the server's own timezone. */
+export function fromZonedInput(value: string, tz = DISPLAY_TZ): Date {
+  const [date, time = "00:00"] = value.split("T");
+  const guess = Date.parse(`${date}T${time.slice(0, 5)}:00Z`);
+  let t = guess - tzOffsetMs(new Date(guess), tz);
+  t = guess - tzOffsetMs(new Date(t), tz); // second pass fixes DST edges
+  return new Date(t);
+}

@@ -5,6 +5,7 @@ import { assertAdmin, type AdminUser } from "@/lib/auth";
 import { db, must } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { slugify } from "@/lib/format";
+import { fromZonedInput } from "@/lib/dates";
 import { CONDITIONS, STATUSES } from "@/lib/admin/products";
 import { deleteImages, imageUrl, putImage } from "@/lib/storage";
 
@@ -104,7 +105,7 @@ export async function saveProduct(input: ProductInput): Promise<ActionResult<{ i
       seo_title: p.seo_title,
       seo_description: p.seo_description,
       authenticity_notes: p.authenticity_notes,
-      publish_at: p.publish_at ? new Date(p.publish_at).toISOString() : null,
+      publish_at: p.publish_at ? fromZonedInput(p.publish_at).toISOString() : null,
       drop_id: p.drop_id ?? null,
     };
 

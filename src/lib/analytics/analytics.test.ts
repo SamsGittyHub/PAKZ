@@ -186,3 +186,13 @@ describe("recommendations", () => {
     expect(r.title).toContain("UK 9, UK 8");
   });
 });
+
+import { fromZonedInput, toZonedInput } from "../dates";
+describe("zoned datetime inputs", () => {
+  it("round-trips London wall-clock times regardless of server timezone", () => {
+    expect(fromZonedInput("2026-07-01T18:30", "Europe/London").toISOString()).toBe("2026-07-01T17:30:00.000Z"); // BST
+    expect(fromZonedInput("2026-12-01T18:30", "Europe/London").toISOString()).toBe("2026-12-01T18:30:00.000Z"); // GMT
+    expect(toZonedInput("2026-07-01T17:30:00.000Z", "Europe/London")).toBe("2026-07-01T18:30");
+    expect(toZonedInput(null)).toBe("");
+  });
+});

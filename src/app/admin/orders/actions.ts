@@ -8,6 +8,7 @@ import { esc, sendEmail, shippedEmail, trackingUrl } from "@/lib/email";
 import { stripe, toMinor } from "@/lib/stripe";
 import { searchVariants as search } from "@/lib/admin/orders";
 import { CHANNELS } from "@/lib/admin/orders";
+import { fromZonedInput } from "@/lib/dates";
 
 type Result<T = undefined> = { ok: true; message?: string; data?: T } | { ok: false; error: string };
 const fail = (e: unknown): { ok: false; error: string } => ({
@@ -132,7 +133,7 @@ export async function recordManualSale(input: z.input<typeof ManualSale>): Promi
     const { data, error } = await db().rpc("record_sale", {
       p_channel: s.channel, p_items: s.items, p_customer_id: customerId,
       p_shipping_charged: s.shipping_charged, p_shipping_cost: s.shipping_cost, p_payment_fees: s.payment_fees,
-      p_paid_at: s.paid_at ? new Date(s.paid_at).toISOString() : new Date().toISOString(),
+      p_paid_at: s.paid_at ? fromZonedInput(s.paid_at).toISOString() : new Date().toISOString(),
       p_external_ref: s.external_ref || null, p_note: s.note || null, p_admin_id: admin.id,
     });
     if (error) throw new Error(error.message);
@@ -201,8 +202,8 @@ export async function saveDrop(input: { id?: string; name: string; description?:
     const row = {
       name: z.string().trim().min(2).parse(input.name),
       description: input.description || null,
-      starts_at: input.starts_at ? new Date(input.starts_at).toISOString() : null,
-      ends_at: input.ends_at ? new Date(input.ends_at).toISOString() : null,
+      starts_at: input.starts_at ? fromZonedInput(input.starts_at).toISOString() : null,
+      ends_at: input.ends_at ? fromZonedInput(input.ends_at).toISOString() : null,
       status: z.enum(["draft", "scheduled", "live", "ended"]).parse(input.status),
     };
     const res = input.id ? await db().from("drops").update(row).eq("id", input.id).select("id").single() : await db().from("drops").insert(row).select("id").single();
@@ -220,7 +221,7 @@ export async function saveRaffle(input: { name: string; product_id?: string; dro
     const admin = await assertAdmin();
     const row = must(await db().from("raffles").insert({
       name: z.string().trim().min(2).parse(input.name), product_id: input.product_id || null, drop_id: input.drop_id || null,
-      starts_at: input.starts_at ? new Date(input.starts_at).toISOString() : null, ends_at: input.ends_at ? new Date(input.ends_at).toISOString() : null,
+      starts_at: input.starts_at ? fromZonedInput(input.starts_at).toISOString() : null, ends_at: input.ends_at ? fromZonedInput(input.ends_at).toISOString() : null,
       status: "open",
     }).select("id").single(), "raffle");
     await audit(admin, "raffle.create", "raffle", row.id, input);

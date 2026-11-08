@@ -1,5 +1,7 @@
 const CURRENCY = process.env.NEXT_PUBLIC_CURRENCY ?? "GBP";
 const LOCALE = process.env.NEXT_PUBLIC_LOCALE ?? "en-GB";
+// Fixed zone so server (UTC on Railway) and browser render identical strings — no hydration mismatches.
+const TZ = process.env.NEXT_PUBLIC_TIMEZONE ?? "Europe/London";
 
 const money0 = new Intl.NumberFormat(LOCALE, { style: "currency", currency: CURRENCY, maximumFractionDigits: 0 });
 const money2 = new Intl.NumberFormat(LOCALE, { style: "currency", currency: CURRENCY, minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -15,9 +17,9 @@ export const fmt = {
   pct: (n: number | string | null | undefined, dp = 1) =>
     n == null || Number.isNaN(Number(n)) ? "—" : `${(Number(n) * 100).toFixed(dp)}%`,
   date: (d: string | Date | null | undefined) =>
-    d ? new Date(d).toLocaleDateString(LOCALE, { day: "numeric", month: "short", year: "numeric" }) : "—",
+    d ? new Date(d).toLocaleDateString(LOCALE, { day: "numeric", month: "short", year: "numeric", timeZone: /^\d{4}-\d{2}-\d{2}$/.test(String(d)) ? "UTC" : TZ }) : "—",
   dateTime: (d: string | Date | null | undefined) =>
-    d ? new Date(d).toLocaleString(LOCALE, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—",
+    d ? new Date(d).toLocaleString(LOCALE, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: TZ }) : "—",
   shortDate: (d: string) => new Date(`${d.slice(0, 10)}T00:00:00Z`).toLocaleDateString(LOCALE, { day: "numeric", month: "short", timeZone: "UTC" }),
   duration: (s: number | null | undefined) => {
     if (s == null) return "—";
