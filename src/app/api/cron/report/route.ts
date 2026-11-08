@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { authorizeCron } from "@/lib/cron";
 import { sendReport, type ReportPeriod } from "@/lib/jobs/report";
 import { runLogged } from "@/lib/jobs/nightly";
-import { db } from "@/lib/supabase/admin";
+import { db } from "@/lib/db";
 
 export const maxDuration = 60;
 

@@ -5,7 +5,7 @@ import { getSettings, iso, one, type SearchParams } from "@/lib/admin/context";
 import { requireOwner } from "@/lib/auth";
 import { resolveRange, rangeQuery, localDate } from "@/lib/dates";
 import { DIMENSIONS, getBreakdown, getDaysToSell, getPnl, type Dimension } from "@/lib/admin/revenue";
-import { db, must } from "@/lib/supabase/admin";
+import { db, must } from "@/lib/db";
 import { fmt } from "@/lib/format";
 import { PageHeader, PageSkeleton, Section } from "@/components/admin/PageHeader";
 import { KpiCard } from "@/components/admin/KpiCard";

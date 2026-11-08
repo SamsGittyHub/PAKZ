@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { requireAdmin } from "@/lib/auth";
-import { db, must } from "@/lib/supabase/admin";
+import { db, must } from "@/lib/db";
 import { PageHeader, PageSkeleton, Section } from "@/components/admin/PageHeader";
 import { TasksTable } from "./TasksTable";
 

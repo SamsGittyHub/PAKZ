@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getAdmin, redact } from "@/lib/auth";
-import { rpc } from "@/lib/supabase/admin";
+import { rpc } from "@/lib/db";
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const admin = await getAdmin();

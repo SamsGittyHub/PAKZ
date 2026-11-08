@@ -54,7 +54,3 @@ end $$;
 revoke execute on function public.publish_scheduled_products() from public, anon, authenticated;
 grant execute on function public.publish_scheduled_products() to service_role;
 
--- Public bucket for product photos (WebP, compressed client-side before upload).
-insert into storage.buckets (id, name, public)
-values ('product-images', 'product-images', true)
-on conflict (id) do nothing;

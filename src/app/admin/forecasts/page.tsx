@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { AlertTriangle } from "lucide-react";
 import { pageContext, iso, type SearchParams } from "@/lib/admin/context";
-import { db, must, rpc } from "@/lib/supabase/admin";
+import { db, must, rpc } from "@/lib/db";
 import { addDays, localDate, zonedMidnight } from "@/lib/dates";
 import { denseDaily, forecastSeries, projectMonth } from "@/lib/analytics/forecast";
 import { predictStockouts, type VariantVelocityRow } from "@/lib/analytics/stockout";

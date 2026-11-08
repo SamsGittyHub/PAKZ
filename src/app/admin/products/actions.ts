@@ -2,10 +2,11 @@
 import { refresh } from "next/cache";
 import { z } from "zod";
 import { assertAdmin, type AdminUser } from "@/lib/auth";
-import { db, must } from "@/lib/supabase/admin";
+import { db, must } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { slugify } from "@/lib/format";
-import { CONDITIONS, IMAGE_BUCKET, STATUSES } from "@/lib/admin/products";
+import { CONDITIONS, STATUSES } from "@/lib/admin/products";
+import { deleteImages, imageUrl, putImage } from "@/lib/storage";
 
 export type ActionResult<T = undefined> = { ok: true; data?: T; message?: string } | { ok: false; error: string };
 
@@ -168,7 +169,7 @@ async function removeImages(productId: string, ids: string[]) {
   const paths = rows.map((r) => r.path);
   const stillUsed = must(await db().from("product_images").select("path").in("path", paths), "images in use").map((r) => r.path);
   const orphaned = paths.filter((p) => !stillUsed.includes(p));
-  if (orphaned.length) await db().storage.from(IMAGE_BUCKET).remove(orphaned);
+  if (orphaned.length) await deleteImages(orphaned);
 }
 
 /** Upload one already-compressed (WebP) image. */
@@ -181,8 +182,7 @@ export async function uploadProductImage(productId: string, form: FormData): Pro
     if (!/^image\/(webp|jpeg|png|avif)$/.test(file.type)) throw new Error(`Unsupported image type ${file.type}`);
     const ext = file.type.split("/")[1];
     const path = `${productId}/${crypto.randomUUID()}.${ext}`;
-    const { error } = await db().storage.from(IMAGE_BUCKET).upload(path, file, { contentType: file.type, cacheControl: "31536000" });
-    if (error) throw new Error(`upload: ${error.message}`);
+    await putImage(path, new Uint8Array(await file.arrayBuffer()), file.type);
 
     const { data: existing } = await db().from("product_images").select("position").eq("product_id", productId).order("position", { ascending: false }).limit(1);
     const position = (existing?.[0]?.position ?? -1) + 1;
@@ -193,8 +193,7 @@ export async function uploadProductImage(productId: string, form: FormData): Pro
       "insert image",
     );
     await audit(admin, "product.image_upload", "product", productId, { path });
-    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${IMAGE_BUCKET}/${path}`;
-    return { ok: true, data: { id: img.id, url, path } };
+    return { ok: true, data: { id: img.id, url: imageUrl(path)!, path } };
   } catch (e) {
     return fail(e);
   }

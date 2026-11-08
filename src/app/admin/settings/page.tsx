@@ -2,11 +2,11 @@ import { Suspense } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { requireOwner } from "@/lib/auth";
 import { getSettings } from "@/lib/admin/context";
-import { db, must } from "@/lib/supabase/admin";
+import { db, must } from "@/lib/db";
 import { integrationStatus } from "@/lib/env";
 import { PageHeader, PageSkeleton, Section } from "@/components/admin/PageHeader";
 import { DataTable } from "@/components/admin/DataTable";
-import { StaffManager, StoreSettingsForm } from "./SettingsForms";
+import { ChangePasswordForm, StaffManager, StoreSettingsForm } from "./SettingsForms";
 
 export default function SettingsPage() {
   return <Suspense fallback={<PageSkeleton />}><Settings /></Suspense>;
@@ -33,7 +33,9 @@ async function Settings() {
         <Section title="Store" className="lg:col-span-2"><StoreSettingsForm initial={settings as unknown as Record<string, unknown>} /></Section>
         <Section title="Integrations">
           <ul className="space-y-3">
-            {status(integrations.supabase, "Supabase", "NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY")}
+            {status(integrations.database, "Database (Postgres + PostgREST)", "POSTGREST_URL, PGRST_JWT_SECRET")}
+            {status(integrations.storage, "Image storage (S3 bucket)", "S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY")}
+            {status(integrations.sessions, "Sign-in sessions", "SESSION_SECRET")}
             {status(integrations.stripe, `Stripe (${integrations.stripeMode})`, "STRIPE_SECRET_KEY — refunds and checkout")}
             {status(integrations.stripeWebhook, "Stripe webhook", "STRIPE_WEBHOOK_SECRET → /api/stripe/webhook")}
             {status(integrations.email, "Email (Resend)", "RESEND_API_KEY, EMAIL_FROM — shipping emails, reports, alerts")}
@@ -47,6 +49,7 @@ async function Settings() {
         <p className="faint mb-3 text-xs">Staff can manage listings, stock and orders but never see costs, margins or profit.</p>
         <StaffManager staff={must(staff, "staff") as { id: string; email: string; full_name: string | null; role: string }[]} me={admin.id} />
       </Section>
+      <Section title="Change my password" className="mt-4"><ChangePasswordForm /></Section>
       <Section title="Audit log" className="mt-4">
         <DataTable
           data={must(auditLog, "audit").map((a) => ({ ...a, diff: a.diff ? JSON.stringify(a.diff).slice(0, 160) : "" }))}

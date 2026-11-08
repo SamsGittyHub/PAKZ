@@ -1,5 +1,5 @@
 import "server-only";
-import { rpc } from "@/lib/supabase/admin";
+import { rpc } from "@/lib/db";
 import type { ResolvedRange } from "@/lib/dates";
 import { iso } from "./context";
 

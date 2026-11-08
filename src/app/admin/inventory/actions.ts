@@ -2,7 +2,7 @@
 import { refresh } from "next/cache";
 import { z } from "zod";
 import { assertAdmin } from "@/lib/auth";
-import { db } from "@/lib/supabase/admin";
+import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
 
 type Result = { ok: true; message: string } | { ok: false; error: string };

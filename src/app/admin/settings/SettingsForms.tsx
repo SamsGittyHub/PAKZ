@@ -2,7 +2,7 @@
 import { useState, useTransition } from "react";
 import { Trash2 } from "lucide-react";
 import { useNotice } from "@/components/admin/Toast";
-import { inviteStaff, saveSettings, setStaffRole } from "./actions";
+import { changeMyPassword, inviteStaff, resetStaffPassword, saveSettings, setStaffRole } from "./actions";
 
 type Rate = { name: string; price: number | string; free_over?: number | string };
 
@@ -62,6 +62,7 @@ export function StoreSettingsForm({ initial }: { initial: Record<string, unknown
 
 export function StaffManager({ staff, me }: { staff: { id: string; email: string; full_name: string | null; role: string }[]; me: string }) {
   const [pending, start] = useTransition();
+  const [issued, setIssued] = useState<{ email: string; password: string } | null>(null);
   const { notice, ok, error } = useNotice();
   const run = (p: Promise<{ ok: boolean; message?: string; error?: string }>) => start(async () => { const r = await p; if (r.ok) ok(r.message ?? "Done"); else error(r.error ?? "Failed"); });
   return (
@@ -78,18 +79,62 @@ export function StaffManager({ staff, me }: { staff: { id: string; email: string
                   <option value="owner">Owner</option><option value="staff">Staff (no costs/profit)</option>
                 </select>
               </td>
-              <td className="text-right">{s.id !== me && <button className="btn btn-sm btn-danger" disabled={pending} onClick={() => confirm(`Remove admin access for ${s.email}?`) && run(setStaffRole(s.id, "customer"))}>Remove</button>}</td>
+              <td className="text-right">
+                {s.id !== me && (
+                  <div className="flex justify-end gap-2">
+                    <button className="btn btn-sm" disabled={pending} onClick={() => confirm(`Reset the password for ${s.email}?`) && start(async () => {
+                      const r = await resetStaffPassword(s.id);
+                      if (r.ok && r.data) setIssued({ email: s.email, password: r.data.tempPassword }); else if (!r.ok) error(r.error);
+                    })}>Reset password</button>
+                    <button className="btn btn-sm btn-danger" disabled={pending} onClick={() => confirm(`Remove admin access for ${s.email}?`) && run(setStaffRole(s.id, "customer"))}>Remove</button>
+                  </div>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
-      <form className="flex flex-wrap gap-2" action={(f) => run(inviteStaff({ email: String(f.get("email")), role: String(f.get("role")) as "staff", name: String(f.get("name") ?? "") }))}>
+      <form className="flex flex-wrap gap-2" action={(f) => start(async () => {
+        const email = String(f.get("email"));
+        const r = await inviteStaff({ email, role: String(f.get("role")) as "staff", name: String(f.get("name") ?? "") });
+        if (!r.ok) { error(r.error); return; }
+        if (r.data?.tempPassword) setIssued({ email, password: r.data.tempPassword }); else ok(r.message ?? "Done");
+      })}>
         <input name="name" className="input !w-40" placeholder="Name" />
         <input name="email" type="email" required className="input !w-64" placeholder="email@example.com" />
         <select name="role" className="input !w-auto" aria-label="Role"><option value="staff">Staff</option><option value="owner">Owner</option></select>
-        <button className="btn" disabled={pending}>Invite</button>
+        <button className="btn" disabled={pending}>Add user</button>
       </form>
+      {issued && (
+        <div role="status" className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 text-sm">
+          <p>Temporary password for <b>{issued.email}</b> — share it privately; it won&apos;t be shown again:</p>
+          <p className="mt-1 font-mono text-base tracking-wide select-all">{issued.password}</p>
+          <p className="faint mt-1 text-xs">They sign in at /login and change it under Settings → Change my password.</p>
+          <button className="btn btn-sm mt-2" onClick={() => setIssued(null)}>Done</button>
+        </div>
+      )}
       {notice}
     </div>
+  );
+}
+
+export function ChangePasswordForm() {
+  const [pending, start] = useTransition();
+  const { notice, ok, error } = useNotice();
+  return (
+    <form className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]" action={(f) => start(async () => {
+      const next = String(f.get("next"));
+      if (next !== String(f.get("confirm"))) { error("New passwords don't match"); return; }
+      const r = await changeMyPassword({ current: String(f.get("current")), next });
+      if (r.ok) ok(r.message ?? "Changed"); else error(r.error);
+    })}>
+      <input name="current" type="password" required autoComplete="current-password" className="input" placeholder="Current password" aria-label="Current password" />
+      <div className="grid gap-2 sm:grid-cols-2 sm:col-span-1">
+        <input name="next" type="password" required minLength={10} autoComplete="new-password" className="input" placeholder="New password" aria-label="New password" />
+        <input name="confirm" type="password" required minLength={10} autoComplete="new-password" className="input" placeholder="Repeat" aria-label="Repeat new password" />
+      </div>
+      <button className="btn" disabled={pending}>Change password</button>
+      {notice}
+    </form>
   );
 }

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { authorizeCron } from "@/lib/cron";
-import { rpc } from "@/lib/supabase/admin";
+import { rpc } from "@/lib/db";
 import { runAlerts } from "@/lib/jobs/alerts";
 import { runLogged } from "@/lib/jobs/nightly";
 

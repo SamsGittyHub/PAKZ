@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import type Stripe from "stripe";
 import { stripe, fromMinor } from "@/lib/stripe";
 import { env } from "@/lib/env";
-import { db, must } from "@/lib/supabase/admin";
+import { db, must } from "@/lib/db";
 
 /**
  * Stripe → orders. Expects Checkout Sessions created by the storefront with metadata:

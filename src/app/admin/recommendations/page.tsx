@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { pageContext, one, type SearchParams } from "@/lib/admin/context";
-import { db, must } from "@/lib/supabase/admin";
+import { db, must } from "@/lib/db";
 import { fmt } from "@/lib/format";
 import { redact } from "@/lib/auth";
 import { PageHeader, PageSkeleton, Section, Empty } from "@/components/admin/PageHeader";

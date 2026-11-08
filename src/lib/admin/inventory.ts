@@ -1,5 +1,5 @@
 import "server-only";
-import { db, must, rpc } from "@/lib/supabase/admin";
+import { db, must, rpc } from "@/lib/db";
 import { redact, type AdminUser } from "@/lib/auth";
 
 export async function getStock(admin: AdminUser, productId?: string) {

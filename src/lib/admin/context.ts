@@ -1,6 +1,6 @@
 import "server-only";
 import { cache } from "react";
-import { db } from "@/lib/supabase/admin";
+import { db } from "@/lib/db";
 import { requireAdmin, type AdminUser } from "@/lib/auth";
 import { resolveRange, type ResolvedRange } from "@/lib/dates";
 

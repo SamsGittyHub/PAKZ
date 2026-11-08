@@ -1,11 +1,8 @@
 import "server-only";
-import { db, must, rpc } from "@/lib/supabase/admin";
+import { db, must, rpc } from "@/lib/db";
 import { redact, type AdminUser } from "@/lib/auth";
+import { imageUrl } from "@/lib/storage";
 import { iso } from "./context";
-
-export const IMAGE_BUCKET = "product-images";
-export const imageUrl = (path: string | null | undefined) =>
-  path ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${IMAGE_BUCKET}/${path}` : null;
 
 export const CONDITIONS = ["new", "new_defects", "used_excellent", "used_good", "used_fair"] as const;
 export const STATUSES = ["draft", "scheduled", "active", "sold", "archived"] as const;

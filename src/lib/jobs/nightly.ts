@@ -1,5 +1,5 @@
 import "server-only";
-import { db, must, rpc } from "@/lib/supabase/admin";
+import { db, must, rpc } from "@/lib/db";
 import { addDays, localDate } from "@/lib/dates";
 import { denseDaily, forecastSeries, horizonTotal } from "@/lib/analytics/forecast";
 import { predictStockouts, type VariantVelocityRow } from "@/lib/analytics/stockout";

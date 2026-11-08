@@ -1,8 +1,8 @@
 import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
-import { authClient } from "@/lib/supabase/server";
-import { db } from "@/lib/supabase/admin";
+import { sessionUserId } from "@/lib/session";
+import { db } from "@/lib/db";
 
 export type AdminRole = "owner" | "staff";
 
@@ -17,18 +17,18 @@ export interface AdminUser {
 
 /** The signed-in admin for this request, or null. Deduped per request. */
 export const getAdmin = cache(async (): Promise<AdminUser | null> => {
-  const supabase = await authClient();
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) return null;
+  const uid = await sessionUserId();
+  if (!uid) return null;
   const { data: profile } = await db()
     .from("profiles")
     .select("role, full_name, email")
-    .eq("id", data.user.id)
+    .eq("id", uid)
     .maybeSingle();
+  // Removing someone's role (or deleting them) revokes access on their next request.
   if (!profile || (profile.role !== "owner" && profile.role !== "staff")) return null;
   return {
-    id: data.user.id,
-    email: profile.email ?? data.user.email ?? "",
+    id: uid,
+    email: profile.email ?? "",
     name: profile.full_name,
     role: profile.role,
     canSeeCosts: profile.role === "owner",

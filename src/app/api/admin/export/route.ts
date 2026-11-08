@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import ExcelJS from "exceljs";
 import { getAdmin, redact } from "@/lib/auth";
-import { db, must, rpc } from "@/lib/supabase/admin";
+import { db, must, rpc } from "@/lib/db";
 import { toCsv } from "@/lib/csv";
 import { resolveRange } from "@/lib/dates";
 import { listProducts } from "@/lib/admin/products";

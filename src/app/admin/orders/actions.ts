@@ -2,7 +2,7 @@
 import { refresh } from "next/cache";
 import { z } from "zod";
 import { assertAdmin } from "@/lib/auth";
-import { db, must } from "@/lib/supabase/admin";
+import { db, must } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { esc, sendEmail, shippedEmail, trackingUrl } from "@/lib/email";
 import { stripe, toMinor } from "@/lib/stripe";

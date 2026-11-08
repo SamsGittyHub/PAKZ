@@ -2,12 +2,12 @@
 import { refresh } from "next/cache";
 import { z } from "zod";
 import { assertAdmin } from "@/lib/auth";
-import { db, must } from "@/lib/supabase/admin";
+import { db, must } from "@/lib/db";
 import { audit } from "@/lib/audit";
-import { env } from "@/lib/env";
+import { hashPassword, temporaryPassword, verifyPassword } from "@/lib/password";
 import { sendReport, type ReportPeriod } from "@/lib/jobs/report";
 
-type Result = { ok: true; message?: string } | { ok: false; error: string };
+type Result<T = undefined> = { ok: true; message?: string; data?: T } | { ok: false; error: string };
 const fail = (e: unknown): { ok: false; error: string } => ({ ok: false, error: e instanceof z.ZodError ? e.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ") : e instanceof Error ? e.message : String(e) });
 
 const Settings = z.object({
@@ -79,24 +79,54 @@ export async function markNotificationsRead(): Promise<Result> {
 // ---------------------------------------------------------------------------
 // Staff
 // ---------------------------------------------------------------------------
-export async function inviteStaff(input: { email: string; role: "owner" | "staff"; name?: string }): Promise<Result> {
+/**
+ * Create an admin account (or grant a role to an existing one). New accounts get a one-time temporary
+ * password that is returned to the owner to pass on; it is never stored in plain text or emailed.
+ */
+export async function inviteStaff(input: { email: string; role: "owner" | "staff"; name?: string }): Promise<Result<{ tempPassword?: string }>> {
   try {
     const admin = await assertAdmin(true);
     const email = z.string().email().parse(input.email.trim().toLowerCase());
     const role = z.enum(["owner", "staff"]).parse(input.role);
-    const existing = (await db().from("profiles").select("id").eq("email", email).maybeSingle()).data;
-    let userId = existing?.id as string | undefined;
+    const found = (await db().rpc("auth_find_user", { p_email: email })).data as { id: string }[] | null;
+    let userId = found?.[0]?.id;
+    let tempPassword: string | undefined;
     if (!userId) {
-      const { data, error } = await db().auth.admin.inviteUserByEmail(email, { redirectTo: `${env.siteUrl}/auth/callback?next=/admin`, data: { full_name: input.name ?? null } });
+      tempPassword = temporaryPassword();
+      const { data, error } = await db().rpc("auth_create_user", { p_email: email, p_password_hash: await hashPassword(tempPassword), p_full_name: input.name || null });
       if (error) throw new Error(error.message);
-      userId = data.user.id;
-      // The auth trigger creates the profile; make sure it exists before setting the role.
-      await db().from("profiles").upsert({ id: userId, email, full_name: input.name ?? null }, { onConflict: "id" });
+      userId = data as string;
     }
-    must(await db().from("profiles").update({ role }).eq("id", userId).select("id"), "profile");
+    must(await db().from("profiles").update({ role, ...(input.name ? { full_name: input.name } : {}) }).eq("id", userId).select("id"), "profile");
     await audit(admin, "staff.invite", "profile", userId, { email, role });
     refresh();
-    return { ok: true, message: existing ? `${email} is now ${role}` : `Invite sent to ${email}` };
+    return { ok: true, message: tempPassword ? `Account created for ${email}` : `${email} is now ${role}`, data: { tempPassword } };
+  } catch (e) { return fail(e); }
+}
+
+export async function resetStaffPassword(userId: string): Promise<Result<{ tempPassword: string }>> {
+  try {
+    const admin = await assertAdmin(true);
+    if (userId === admin.id) throw new Error("Use “Change my password” for your own account");
+    const tempPassword = temporaryPassword();
+    const { error } = await db().rpc("auth_set_password", { p_user_id: userId, p_password_hash: await hashPassword(tempPassword) });
+    if (error) throw new Error(error.message);
+    await audit(admin, "staff.reset_password", "profile", userId);
+    return { ok: true, message: "Password reset", data: { tempPassword } };
+  } catch (e) { return fail(e); }
+}
+
+export async function changeMyPassword(input: { current: string; next: string }): Promise<Result> {
+  try {
+    const admin = await assertAdmin();
+    if (input.next.length < 10) throw new Error("Use at least 10 characters");
+    const found = (await db().rpc("auth_find_user", { p_email: admin.email })).data as { id: string; encrypted_password: string }[] | null;
+    const me = found?.find((u) => u.id === admin.id);
+    if (!me || !(await verifyPassword(input.current, me.encrypted_password))) throw new Error("Current password is incorrect");
+    const { error } = await db().rpc("auth_set_password", { p_user_id: admin.id, p_password_hash: await hashPassword(input.next) });
+    if (error) throw new Error(error.message);
+    await audit(admin, "auth.change_password", "profile", admin.id);
+    return { ok: true, message: "Password changed" };
   } catch (e) { return fail(e); }
 }
 

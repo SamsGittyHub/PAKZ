@@ -1,5 +1,5 @@
 import "server-only";
-import { db, must } from "@/lib/supabase/admin";
+import { db, must } from "@/lib/db";
 import { esc, sendEmail } from "@/lib/email";
 import { fmt } from "@/lib/format";
 import { env } from "@/lib/env";

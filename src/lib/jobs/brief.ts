@@ -1,6 +1,6 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
-import { db, must, rpc } from "@/lib/supabase/admin";
+import { db, must, rpc } from "@/lib/db";
 import { env } from "@/lib/env";
 import { addDays, localDate, zonedMidnight } from "@/lib/dates";
 

@@ -1,5 +1,5 @@
 import "server-only";
-import { db } from "@/lib/supabase/admin";
+import { db } from "@/lib/db";
 import type { AdminUser } from "@/lib/auth";
 
 export async function audit(admin: AdminUser, action: string, entity: string, entityId: string | null, diff?: unknown) {

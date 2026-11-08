@@ -12,11 +12,10 @@ export function LoginForm({ next }: { next: string }) {
         <input name="email" type="email" required autoComplete="email" className="input mt-1" />
       </label>
       <label className="block text-sm">
-        <span className="text-[var(--ink-2)]">Password <span className="text-[var(--ink-3)]">(leave blank for a magic link)</span></span>
-        <input name="password" type="password" autoComplete="current-password" className="input mt-1" />
+        <span className="text-[var(--ink-2)]">Password</span>
+        <input name="password" type="password" required autoComplete="current-password" className="input mt-1" />
       </label>
       {state.error && <p className="text-sm text-[var(--critical)]">{state.error}</p>}
-      {state.sent && <p className="text-sm text-[var(--good-ink)]">Check your inbox for a sign-in link.</p>}
       <button disabled={pending} className="btn btn-primary w-full">{pending ? "Signing in…" : "Sign in"}</button>
     </form>
   );

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { pageContext, type SearchParams } from "@/lib/admin/context";
-import { db, must } from "@/lib/supabase/admin";
+import { db, must } from "@/lib/db";
 import { buildReport } from "@/lib/jobs/report";
 import { fmt } from "@/lib/format";
 import { PageHeader, PageSkeleton, Section, Empty } from "@/components/admin/PageHeader";

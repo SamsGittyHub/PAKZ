@@ -1,5 +1,5 @@
 import "server-only";
-import { db, must, rpc } from "@/lib/supabase/admin";
+import { db, must, rpc } from "@/lib/db";
 import { addDays, localDate, zonedMidnight } from "@/lib/dates";
 import { esc, sendEmail } from "@/lib/email";
 import { change, fmt } from "@/lib/format";

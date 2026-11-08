@@ -4,7 +4,7 @@ import { assertAdmin } from "@/lib/auth";
 import { audit } from "@/lib/audit";
 import { refreshRollups, runForecasts, runLogged, runRecommendations } from "@/lib/jobs/nightly";
 import { generateBuyingBrief } from "@/lib/jobs/brief";
-import { db } from "@/lib/supabase/admin";
+import { db } from "@/lib/db";
 
 export async function recomputeAnalytics() {
   try {

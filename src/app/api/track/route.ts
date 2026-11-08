@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { db } from "@/lib/supabase/admin";
+import { db } from "@/lib/db";
 import { ADMIN_COOKIE, TRACK_EVENT_TYPES, classifySource, deviceFromUserAgent, isBotUserAgent } from "@/lib/track/shared";
 
 const uuid = z.string().uuid().optional();

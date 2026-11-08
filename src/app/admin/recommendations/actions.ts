@@ -1,7 +1,7 @@
 "use server";
 import { refresh } from "next/cache";
 import { assertAdmin } from "@/lib/auth";
-import { db, must } from "@/lib/supabase/admin";
+import { db, must } from "@/lib/db";
 import { audit } from "@/lib/audit";
 
 export async function setRecommendationStatus(id: string, status: "dismissed" | "actioned" | "new") {

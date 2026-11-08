@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { pageContext, iso, one, type SearchParams } from "@/lib/admin/context";
 import { getTimeseries } from "@/lib/admin/overview";
 import { getLookups } from "@/lib/admin/products";
-import { rpc } from "@/lib/supabase/admin";
+import { rpc } from "@/lib/db";
 import { fmt } from "@/lib/format";
 import { PageHeader, PageSkeleton, Section } from "@/components/admin/PageHeader";
 import { KpiCard } from "@/components/admin/KpiCard";

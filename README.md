@@ -2,16 +2,17 @@
 
 Admin dashboard, multi-quantity inventory, first-party analytics, forecasting, and buying recommendations for the PAKZ resale store.
 
-**Stack:** Next.js 16 (App Router, Cache Components) · Supabase (Postgres, Auth, Storage) · Stripe · Resend · Recharts · TanStack Table · Claude API (optional weekly brief) · Vercel Cron.
+**Stack:** Next.js 16 (App Router, Cache Components) · Postgres + PostgREST · S3-compatible storage · Stripe · Resend · Recharts · TanStack Table · Claude API (optional weekly brief). Hosted entirely on Railway.
 
 ## Quick start (local)
 
 ```bash
 npm install
-npx supabase start            # local Postgres/Auth/Storage; applies migrations + seed.sql (demo data)
-cp .env.example .env.local    # fill the Supabase URL/keys printed by `supabase status`
-node --env-file=.env.local scripts/create-owner.mjs you@example.com 'a-strong-password'
-npm run dev                   # http://localhost:3000/admin
+docker compose up -d                                        # Postgres :54322, PostgREST :54321, S3 storage :54323
+cp .env.example .env.local                                  # the local defaults in the file match docker-compose.yml
+node --env-file=.env.local scripts/migrate.mjs --seed       # schema + demo data + owner from OWNER_EMAIL/OWNER_PASSWORD
+docker compose restart postgrest                            # first run only: its login role now exists
+npm run dev                                                 # http://localhost:3000/admin
 ```
 
 To compute forecasts and recommendations for the demo data straight away, sign in as owner and click **Recompute now** on Forecasts, or:
@@ -20,7 +21,7 @@ To compute forecasts and recommendations for the demo data straight away, sign i
 curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/nightly?brief=0"
 ```
 
-Tests: `npm test` (forecasting and recommendation engine unit tests). The SQL ledger, refunds and every dashboard RPC are exercised by `supabase/tests/01_inventory_flow.sql` (it runs inside a rolled-back transaction).
+Tests: `npm test` (forecasting and recommendation engine unit tests). The SQL ledger, refunds and every dashboard RPC are exercised by `db/tests/01_inventory_flow.sql` (run it with psql against a migrated database; it rolls back).
 
 ## What's where
 
@@ -39,8 +40,9 @@ Tests: `npm test` (forecasting and recommendation engine unit tests). The SQL le
 | Settings (owner) | `/admin/settings` | Store, shipping rates, VAT, integration status, staff and roles, audit log |
 
 ```
-supabase/migrations/   schema, ledger triggers, analytics RPCs, RLS, tracking ingest
-supabase/seed.sql      ~150 days of demo catalogue, traffic and sales
+db/migrations/         platform roles + auth schema, catalogue, ledger triggers, analytics RPCs, RLS, tracking ingest
+db/seed.sql            ~150 days of demo catalogue, traffic and sales
+scripts/migrate.mjs    applies migrations (Railway pre-deploy), PostgREST role, first owner, optional --seed
 src/lib/analytics/     forecast.ts (Holt-Winters / moving average), recommendations.ts, stockout.ts — pure + unit-tested
 src/lib/jobs/          nightly.ts, alerts.ts, report.ts, brief.ts
 src/lib/track/         first-party tracker (client) + shared bot/source logic
@@ -60,15 +62,19 @@ src/app/api/           track, stripe/webhook, cron/*, admin/export, admin/realti
 
 ## Deployment (Railway)
 
-The app runs as one Railway service built from this repo (`npm run build` / `npm start`, Node 24). It needs a **hosted Supabase project**:
+Everything runs in one Railway project:
 
-1. Create a project at supabase.com, then apply the schema: `npx supabase link --project-ref <ref> && npx supabase db push` (don't run `seed.sql` in production — it's demo data).
-2. In the Railway service variables set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (and optionally Stripe / Resend / Anthropic keys from `.env.example`). Railway rebuilds on change — `NEXT_PUBLIC_*` values are baked in at build time.
-3. In Supabase → Authentication → URL configuration, set the Site URL to the Railway domain and add `<domain>/auth/callback` as a redirect URL.
-4. Create the first owner: `node --env-file=.env.production scripts/create-owner.mjs you@example.com '<password>'` with the production Supabase URL and service-role key in that file.
-5. Point the Stripe webhook at `<domain>/api/stripe/webhook` (events: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `charge.refunded`).
+| Service | What |
+|---|---|
+| `pakz-web` | this repo (`npm run build` / `npm start`, Node 24). Pre-deploy runs `node scripts/migrate.mjs`, so every deploy applies new migrations first. |
+| `Postgres` | Railway Postgres (the database) |
+| `postgrest` | `postgrest/postgrest` image: the data API the app talks to over the private network. Not exposed publicly. |
+| `product-images` | Railway bucket for product photos, served through `/api/images/…` |
+| `cron-*` | three `curlimages/curl` cron services calling the endpoints below with `Authorization: Bearer $CRON_SECRET` |
 
-Scheduled jobs run as three Railway cron services (image `curlimages/curl`) that call the endpoints below with `Authorization: Bearer $CRON_SECRET`. `vercel.json` holds the same schedule if you deploy to Vercel instead.
+Accounts are app-managed: scrypt-hashed passwords in `auth.users`, HMAC-signed `pakz_session` cookie. The first owner is created by the migration from `OWNER_EMAIL` / `OWNER_PASSWORD` (only when no owner exists — remove `OWNER_PASSWORD` afterwards). Owners add staff in **Settings → Staff & roles**, which issues a one-time temporary password; everyone changes their own password under **My account** (click your email in the sidebar).
+
+Optional integrations: Stripe (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, webhook → `<domain>/api/stripe/webhook` for `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `charge.refunded`), Resend (`RESEND_API_KEY`, `EMAIL_FROM`), Claude Buying Brief (`ANTHROPIC_API_KEY`).
 
 ## Cron
 

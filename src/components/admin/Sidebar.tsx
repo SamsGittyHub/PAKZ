@@ -61,7 +61,7 @@ export function Sidebar({ role, email, logout }: { role: "owner" | "staff"; emai
         </Link>
       ))}
       <div className="mt-auto border-t border-[var(--border)] px-2 pt-3 text-xs">
-        <div className="truncate text-[var(--ink-2)]">{email}</div>
+        <Link href="/admin/account" className="block truncate text-[var(--ink-2)] hover:underline" onClick={() => setOpen(false)}>{email}</Link>
         <div className="faint mb-2 capitalize">{role}</div>
         <form action={logout}><button className="btn btn-sm btn-ghost -ml-2"><LogOut size={14} /> Sign out</button></form>
       </div>

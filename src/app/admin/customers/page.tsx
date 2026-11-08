@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { requireAdmin } from "@/lib/auth";
-import { rpc } from "@/lib/supabase/admin";
+import { rpc } from "@/lib/db";
 import { PageHeader, PageSkeleton, Section } from "@/components/admin/PageHeader";
 import { KpiCard } from "@/components/admin/KpiCard";
 import { DataTable } from "@/components/admin/DataTable";

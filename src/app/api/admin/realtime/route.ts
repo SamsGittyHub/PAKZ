@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdmin } from "@/lib/auth";
-import { rpc } from "@/lib/supabase/admin";
+import { rpc } from "@/lib/db";
 
 export async function GET() {
   if (!(await getAdmin())) return NextResponse.json({ error: "unauthorised" }, { status: 401 });

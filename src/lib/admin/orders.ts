@@ -1,5 +1,5 @@
 import "server-only";
-import { db, must } from "@/lib/supabase/admin";
+import { db, must } from "@/lib/db";
 import { redact, type AdminUser } from "@/lib/auth";
 
 export const ORDER_STATUSES = ["pending", "paid", "shipped", "delivered", "cancelled", "refunded", "partially_refunded"] as const;
